@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title data-i18n="page_title">Hana Coffee — Hệ thống Quản lý Đơn hàng & Kho (Odoo ERP)</title>
+
+  <meta
+    name="description"
+    content="Case study phân tích hệ thống và triển khai PoC Odoo ERP cho Hana Coffee, chuẩn hóa quy trình xử lý đơn hàng, điều phối bếp và quản lý nguyên vật liệu."
+    data-i18n-meta="page_desc"
+  >
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap"
+    rel="stylesheet"
+  >
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 96px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body.no-scroll {
+      overflow: hidden;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    h1, h2, h3, p, ul, ol, figure {
+      margin: 0;
+    }
+
+    ul, ol {
+      padding: 0;
+      list-style: none;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    main {
+      display: block;
+      flex: 1;
+      padding: 70px 0px 0px 0px;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+
+    :root{
+      --bg:#080D1C;
+      --bg-soft:#111827;
+      --card:#111A2E;
+      --ink:#F1F5F9;
+      --ink-soft:#94A3B8;
+      --ink-muted:#64748B;
+      --pill:#111A2E;
+      --pill-line:#263249;
+      --accent:#3B82F6;
+      --accent-light:#60A5FA;
+      --glow-rgb: 59, 130, 246;
+      --focus:#22D3EE;
+    }
+
+    [data-theme="light"] {
+      --bg: #F8FAFC;
+      --bg-soft: #EEF4FF;
+      --card: #FFFFFF;
+      --ink: #0F172A;
+      --ink-soft: #526078;
+      --ink-muted: #64748B;
+      --pill: #EEF4FF;
+      --pill-line: #D7DFEC;
+      --accent: #2563EB;
+      --accent-light: #60A5FA;
+      --glow-rgb: 37, 99, 235;
+      --focus: #22D3EE;
+    }
+
+    .project-page {
+      position: relative;
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at 85% 15%,
+          rgba(255,255,255,.025),
+          transparent 30%
+        ),
+        var(--bg);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .hero-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 460px;
+      background-image:
+        linear-gradient(
+          to bottom,
+          rgba(0,0,0,.42),
+          rgba(0,0,0,.88) 72%,
+          var(--bg) 100%
+        ),
+        url("https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=2200&q=80");
+      background-size: cover;
+      background-position: center top;
+      filter: grayscale(100%);
+      opacity: .42;
+      transition: opacity 0.5s ease;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 1280px);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* =========================================================
+       NAVIGATION
+       ========================================================= */
+    .site-header {
+      position: fixed;
+      top: 14px;
+      left: 0;
+      right: 0;
+      z-index: 60;
+      height: 52px;
+      pointer-events: none;
+      padding: 22px 40px;
+    }
+
+    .bar {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-radius: 999px;
+      color: #fff;
+      pointer-events: auto;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: 0 10px 30px -12px rgba(11,18,48,.6);
+    }
+
+    .bar:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background: rgba(11,18,48,.78);
+      backdrop-filter: saturate(1.5) blur(14px);
+      -webkit-backdrop-filter: saturate(1.5) blur(14px);
+    }
+
+    .nav {
+      display: flex;
+      gap: 2px;
+    }
+
+    .nav a {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,.72);
+      text-decoration: none;
+      transition: color .2s, background-color .2s;
+    }
+
+    .nav a:hover {
+      color: #fff;
+    }
+
+    .nav a[aria-current="true"] {
+      color: #fff;
+      background: rgba(255,255,255,.16);
+    }
+
+    .top-tools {
+      position: absolute;
+      right: 18px;
+      top: 0;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      pointer-events: auto;
+    }
+
+    .tool {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 38px;
+      height: 38px;
+      padding: 0 11px;
+      background: rgba(11,18,48,.78);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 8px 24px -12px rgba(11,18,48,.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background-color .2s, transform .2s;
+    }
+
+    .tool:hover {
+      background: rgba(11,18,48,.95);
+      transform: translateY(-1px);
+    }
+
+    .tool svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .lang {
+      font-size: .72rem;
+      font-weight: 500;
+      color: rgba(255,255,255,.58);
+    }
+
+    .lang span+span:before {
+      content: "/";
+      margin: 0 5px;
+      opacity: .45;
+      font-weight: 400;
+    }
+
+    html[lang="vi"] .lang [data-l="vi"],
+    html[lang="en"] .lang [data-l="en"] {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .i-sun {
+      display: none;
+    }
+
+    [data-theme="light"] .i-moon {
+      display: none;
+    }
+
+    [data-theme="light"] .i-sun {
+      display: block;
+    }
+
+    .menu-btn {
+      display: none;
+    }
+
+    .menu-btn .i-close {
+      display: none;
+    }
+
+    .menu-btn[aria-expanded="true"] .i-open {
+      display: none;
+    }
+
+    .menu-btn[aria-expanded="true"] .i-close {
+      display: block;
+    }
+
+    @media(max-width:860px) {
+      .site-header { top: 10px; height: 45px; }
+      .bar { left: 12px; transform: none; right: auto; }
+      .top-tools { right: 10px; height: 45px; }
+      .nav {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: auto;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        padding: 96px 24px 40px;
+        background: #111827;
+      }
+      .nav.is-open { display: flex; }
+      .nav a {
+        padding: 6px 0;
+        border-radius: 0;
+        background: none !important;
+        font: 800 clamp(2.25rem, 11vw, 3.5rem)/1.15 'Bricolage Grotesque', sans-serif;
+        font-stretch: 82%;
+        color: rgba(255,255,255,.6);
+      }
+      .nav a[aria-current="true"], .nav a:hover { color: var(--accent-light); }
+      .menu-btn { display: inline-flex; position: relative; z-index: 3; }
+    }
+
+    @media(max-width:520px) {
+      .top-tools { gap: 4px; }
+      .tool { min-width: 35px; height: 35px; padding: 0 9px; }
+      .lang { font-size: .65rem; }
+    }
+
+    /* breadcrumb */
+    .breadcrumb {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--ink-muted);
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .breadcrumb a {
+      transition: color .2s ease;
+      color: var(--ink-soft);
+    }
+
+    .breadcrumb a:hover {
+      color: var(--ink);
+    }
+
+    .breadcrumb .current {
+      color: var(--ink);
+    }
+    .breadcrumb .separator {
+      opacity: .35;
+    }
+
+    .project-hero {
+      padding-top: 10px;
+      padding-bottom: 48px;
+    }
+
+    .project-label {
+      margin-bottom: 8px;
+      color: var(--ink-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 600;
+    }
+
+    .project-title {
+      font-family: 'Bricolage Grotesque', 'Be Vietnam Pro', system-ui, sans-serif;
+      font-stretch: 82%;
+      font-size: clamp(32px, 4.5vw, 48px);
+      line-height: 1.18;
+      letter-spacing: -.035em;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: var(--ink);
+      text-wrap: balance;
+    }
+
+    .project-description {
+      max-width: 750px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .project-meta {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1.08fr;
+      min-height: 180px;
+      border-top: 1px solid var(--pill-line);
+      border-bottom: 1px solid var(--pill-line);
+    }
+
+    .meta-left {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 28px 30px 24px 0;
+    }
+
+    .meta-item {
+      margin-bottom: 22px;
+    }
+
+    .meta-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink-muted);
+      font-size: 11px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 600;
+    }
+
+    .meta-value {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .meta-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: opacity .2s ease, transform .2s ease;
+      color: var(--accent-light);
+      font-weight: 600;
+    }
+
+    .meta-link:hover {
+      opacity: .8;
+      transform: translateX(2px);
+    }
+
+    .external-icon {
+      font-size: 12px;
+      opacity: .8;
+      transition: transform 0.2s ease;
+    }
+
+    .meta-tech {
+      border-left: 1px solid var(--pill-line);
+      padding: 28px 0 24px 24px;
+    }
+
+    .tech-label {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--ink-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 600;
+    }
+
+    .tech-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tech-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid var(--pill-line);
+      border-radius: 6px;
+      background: var(--card);
+      color: var(--ink-soft);
+      font-size: 10px;
+      line-height: 1.2;
+      transition: all .25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tech-tag:hover {
+      background: var(--pill);
+      border-color: var(--accent);
+      color: var(--ink);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(var(--glow-rgb), 0.15);
+    }
+
+    .content-section {
+      display: grid;
+      grid-template-columns: 260px 1px minmax(0, 1fr);
+      min-height: 200px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .content-section.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-intro {
+      padding: 52px 32px 64px 0;
+    }
+
+    .section-number {
+      margin-bottom: 8px;
+      color: var(--ink-muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+    }
+
+    .section-title {
+      font-family: 'Bricolage Grotesque', 'Be Vietnam Pro', system-ui, sans-serif;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: -.025em;
+    }
+
+    .section-subtitle {
+      color: var(--ink-muted);
+      font-size: 13px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .section-line {
+      border-left: 1px dashed var(--ink-muted);
+    }
+
+    .section-content {
+      padding: 52px 0 64px 52px;
+      max-width: 800px;
+    }
+
+    .section-content p {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.85;
+    }
+
+    .section-content p + p {
+      margin-top: 18px;
+    }
+
+    .folders-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .folder-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--pill-line);
+      padding: 16px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .folder-card:hover {
+      background: var(--pill);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(var(--glow-rgb), 0.15);
+    }
+
+    .folder-icon {
+      font-size: 26px;
+    }
+
+    .folder-info .folder-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .folder-description {
+      margin-top: 6px;
+      font-size: 9px;
+      line-height: 1.5;
+      color: var(--ink-muted);
+      font-weight: 400;
+      max-width: 520px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .gallery-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 40px 20px;
+      overflow-y: auto;
+      animation: fadeInModal 0.3s ease forwards;
+    }
+
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .gallery-modal-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .gallery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--pill-line);
+      padding-bottom: 13px;
+    }
+
+    .gallery-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .gallery-item {
+      background: var(--card);
+      border: 1px solid var(--pill-line);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .gallery-item:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(var(--glow-rgb), 0.15);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.05);
+    }
+
+    .gallery-item-caption {
+      padding: 12px;
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: rgba(0, 0, 0, 0.95);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .lightbox-content {
+      max-width: 85%;
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid var(--pill-line);
+    }
+
+    .lightbox-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--pill);
+      border: 1px solid var(--pill-line);
+      color: var(--ink);
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 1200;
+    }
+
+    .lightbox-btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .lightbox-prev { left: 30px; }
+    .lightbox-next { right: 30px; }
+
+    .image-modal-close {
+      position: absolute;
+      top: 25px;
+      right: 30px;
+      background: var(--pill);
+      border: 1px solid var(--pill-line);
+      color: var(--ink);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 1200;
+    }
+
+    .image-modal-close:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .contribution-list {
+      list-style: none;
+      margin-top: 14px;
+    }
+
+    .contribution-list li {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 13px;
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .contribution-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--accent-light);
+      font-weight: bold;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--pill-line);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .divider.is-visible {
+      transform: scaleX(1);
+    }
+
+    .section-spacer {
+      height: 80px;
+    }
+
+    footer {
+      max-width: 1210px;
+      margin: auto 0;
+      padding: 30px 30px 35px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      color: #71717A;
+      font-size: 11px;
+      font-weight: 600;
+      border-top: 1px solid #272732;
+    }
+
+    footer .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    footer a {
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    footer a:hover {
+      color: var(--ink);
+    }
+
+    @media (max-width: 900px) {
+      footer {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 800px) {
+      .container { padding: 0 18px; }
+      .hero-image { height: 420px; }
+      .project-hero { padding-top: 10px; }
+      .project-title { font-size: 28px; }
+      .project-meta { grid-template-columns: 1fr; }
+      .meta-left { padding: 22px 0 5px; }
+      .meta-tech {
+        border-left: 0;
+        border-top: 1px solid var(--pill-line);
+        padding: 22px 0;
+      }
+      .content-section { grid-template-columns: 160px 1px minmax(0, 1fr); }
+      .section-intro { padding-right: 20px; }
+      .section-content { padding-left: 28px; }
+    }
+
+    @media (max-width: 560px) {
+      .breadcrumb { font-size: 11px; }
+      .project-title { font-size: 24px; }
+      .meta-left { grid-template-columns: 1fr 1fr; }
+      .content-section { grid-template-columns: 1fr; }
+      .section-line { display: none; }
+      .section-intro { padding: 35px 0 15px; }
+      .section-content { padding: 10px 0 50px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================================================
+       NAVIGATION
+       ========================================================= -->
+  <header class="site-header">
+    <div class="bar">
+      <nav class="nav" id="site-nav" aria-label="Điều hướng chính">
+        <a href="index.html" data-i18n="nav_home">Trang chủ</a>
+        <a href="#about" data-i18n="nav_about">Giới thiệu</a>
+        <a href="#skills" data-i18n="nav_skills">Kỹ năng</a>
+        <a href="#projects" data-i18n="nav_projects" aria-current="true">Dự án</a>
+        <a href="#contact" data-i18n="nav_contact">Liên hệ</a>
+      </nav>
+      <button class="tool menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Mở menu">
+        <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="top-tools">
+      <button class="tool lang" id="lang-btn" type="button" aria-label="Đổi ngôn ngữ">
+        <span data-l="vi">VI</span><span data-l="en">EN</span>
+      </button>
+      <button class="tool theme-btn" id="theme-btn" type="button" aria-label="Đổi giao diện sáng/tối">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="project-page">
+
+      <div class="hero-image"></div>
+
+      <div class="container animate-fade-in">
+
+        <nav class="breadcrumb">
+          <a href="index.html" data-i18n="bc_home">Trang chủ</a>
+          <span class="separator">›</span>
+          <a href="/projects" data-i18n="bc_projects">Dự án</a>
+          <span class="separator">›</span>
+          <span class="current" data-i18n="bc_current">Hana Coffee - Hệ thống Quản lý Đơn hàng &amp; Kho</span>
+        </nav>
+
+        <section class="project-hero" id="home">
+          <div class="project-label" data-i18n="hero_label">
+            Đồ án học phần - Phân tích Hệ thống &amp; Nghiên cứu Tình huống Triển khai ERP · Đồ án nhóm 6 người
+          </div>
+          <h1 class="project-title" data-i18n="hero_title">
+            Hana Coffee - Hệ thống Quản lý Đơn hàng &amp; Kho trên Odoo
+          </h1>
+          <p class="project-description" data-i18n="hero_desc">
+            Khảo sát, phân tích và xây dựng hệ thống quản lý đơn hàng (OMS) tích hợp quản lý kho (WMS) trên Odoo 18 Community cho Hana Coffee, từ bán hàng tại quầy đến kiểm soát nguyên vật liệu, chăm sóc khách hàng và quản lý ca làm.
+          </p>
+        </section>
+
+        <section class="project-meta">
+
+          <div class="meta-left">
+            <div class="meta-item">
+              <span class="meta-label" data-i18n="meta_type_label">Loại dự án</span>
+              <span class="meta-value" data-i18n="meta_type_val">Phân tích nghiệp vụ &amp; Triển khai ERP</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-label" data-i18n="meta_sow_label">Đơn vị khảo sát</span>
+              <span class="meta-value" data-i18n="meta_sow_val">Hana Coffee, TP. Hồ Chí Minh</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-label" data-i18n="meta_update_label">Cập nhật</span>
+              <span class="meta-value">2026</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-label" data-i18n="meta_platform_label">Nền tảng</span>
+              <span class="meta-value" data-i18n="meta_platform_val">Odoo 18 Community · Web-based ERP</span>
+            </div>
+          </div>
+
+          <div class="meta-tech">
+            <span class="tech-label" data-i18n="tech_methods_label">Mô hình &amp; Kỹ thuật</span>
+            <div class="tech-list" style="margin-bottom: 14px;">
+              <span class="tech-tag">BPMN 2.0</span>
+              <span class="tech-tag">Use Case</span>
+              <span class="tech-tag">Activity Diagram</span>
+              <span class="tech-tag">Sequence Diagram</span>
+              <span class="tech-tag">ERD</span>
+            </div>
+            <span class="tech-label" data-i18n="tech_tools_label">Công cụ &amp; Công nghệ</span>
+            <div class="tech-list">
+              <span class="tech-tag">Odoo 18</span>
+              <span class="tech-tag">Python</span>
+              <span class="tech-tag">PostgreSQL</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- 01 / Bối cảnh & SOW -->
+        <section class="content-section" id="about">
+          <div class="section-intro">
+            <div class="section-number" data-i18n="sec1_number">01 / Bối cảnh &amp; Phạm vi</div>
+            <h2 class="section-title" data-i18n="sec1_title">Bối cảnh &amp; Phạm vi</h2>
+            <div class="section-subtitle" data-i18n="sec1_subtitle">Thách thức vận hành và phạm vi công việc dự án.</div>
+          </div>
+          <div class="section-line"></div>
+          <div class="section-content">
+            <p data-i18n="sec1_p1">
+              Qua phỏng vấn và quan sát trực tiếp tại Hana Coffee, nhóm ghi nhận một số điểm nghẽn trong quy trình vận hành:
+            </p>
+            <ul class="contribution-list">
+              <li data-i18n="sec1_li1">Order được ghi bằng sổ tay hoặc ghi chú điện thoại trước khi nhập vào iPOS, dễ phát sinh nhầm lẫn và chậm trễ vào giờ cao điểm.</li>
+              <li data-i18n="sec1_li2">Kho nguyên liệu được theo dõi bằng sổ tay và cập nhật cuối ngày, khiến thông tin tồn kho chưa phản ánh theo thời gian thực.</li>
+              <li data-i18n="sec1_li3">Báo cáo doanh thu và tồn kho được tổng hợp thủ công qua iPOS và Excel.</li>
+            </ul>
+
+            <p style="font-weight: 600; margin-top: 26px;" data-i18n="sec1_p3_title">Phạm vi công việc:</p>
+            <ul class="contribution-list">
+              <li data-i18n="sec1_li5">Khảo sát hiện trạng, stakeholder và pain points.</li>
+              <li data-i18n="sec1_li6">Phân tích nhu cầu người dùng và yêu cầu chức năng/phi chức năng.</li>
+              <li data-i18n="sec1_li7">Mô hình hóa quy trình AS-IS / TO-BE bằng BPMN.</li>
+              <li data-i18n="sec1_li8">Đặc tả Use Case, thiết kế Activity Diagram, Sequence Diagram và ERD.</li>
+              <li data-i18n="sec1_li9">Cấu hình, phát triển bổ sung và kiểm thử hệ thống trên Odoo 18 Community.</li>
+            </ul>
+            <p style="margin-top: 16px; font-size: 13px; color: var(--ink-muted);" data-i18n="sec1_p_out">
+              <em>Ngoài phạm vi: đa kho, đa chi nhánh và tối ưu chuỗi cung ứng.</em>
+            </p>
+          </div>
+        </section>
+
+        <!-- 02 / Sản phẩm đã thực hiện -->
+        <div class="divider"></div>
+        <section class="content-section" id="projects">
+          <div class="section-intro">
+            <div class="section-number" data-i18n="sec2_number">02 / Sản phẩm dự án</div>
+            <h2 class="section-title" data-i18n="sec2_title">Sản phẩm dự án</h2>
+            <div class="section-subtitle" data-i18n="sec2_subtitle">
+              Các deliverables từ khảo sát hiện trạng, phân tích nghiệp vụ đến thiết kế và triển khai hệ thống Odoo.
+            </div>
+          </div>
+
+          <div class="section-line"></div>
+
+          <div class="section-content">
+            <div class="folders-container">
+
+              <div class="folder-card" onclick="openFolder('asis')">
+                <div class="folder-icon">📁</div>
+                <div class="folder-info">
+                  <div class="folder-name" data-i18n="folder1_name">Quy trình Hiện trạng (AS-IS)</div>
+                  <div class="folder-description" data-i18n="folder1_desc">
+                    BPMN quy trình bán hàng hiện tại, phân tích stakeholder và xác định các pain points trong vận hành.
+                  </div>
+                </div>
+              </div>
+
+              <div class="folder-card" onclick="openFolder('design')">
+                <div class="folder-icon">📁</div>
+                <div class="folder-info">
+                  <div class="folder-name" data-i18n="folder2_name">Quy trình Cải tiến (TO-BE)</div>
+                  <div class="folder-description" data-i18n="folder2_desc">
+                    Thiết kế 5 quy trình đề xuất gồm bán hàng, nhập kho & cảnh báo tồn kho, hủy/đổi món, khách hàng thân thiết và xếp ca & chấm công.
+                  </div>
+                </div>
+              </div>
+
+              <div class="folder-card" onclick="openFolder('ui')">
+                <div class="folder-icon">📁</div>
+                <div class="folder-info">
+                  <div class="folder-name" data-i18n="folder3_name">Phân tích &amp; Thiết kế Hệ thống</div>
+                  <div class="folder-description" data-i18n="folder3_desc">
+                    Yêu cầu chức năng/phi chức năng, Use Case tổng quát và đặc tả chi tiết, 8 Activity Diagram, 8 Sequence Diagram và ERD.
+                  </div>
+                </div>
+              </div>
+
+              <div class="folder-card" onclick="openFolder('documentation')">
+                <div class="folder-icon">📁</div>
+                <div class="folder-info">
+                  <div class="folder-name" data-i18n="folder4_name">Cấu hình &amp; Phát triển trên Odoo</div>
+                  <div class="folder-description" data-i18n="folder4_desc">
+                    Cấu hình Purchase, Inventory, Manufacturing, POS, KDS, CRM, Loyalty và Attendance; kết hợp phát triển bổ sung các chức năng đặc thù cho nghiệp vụ F&B.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- 03 / Đóng góp của tôi (Role & Responsibilities) -->
+        <div class="divider"></div>
+        <section class="content-section" id="skills">
+          <div class="section-intro">
+            <div class="section-number" data-i18n="sec3_number">03 / Vai trò &amp; Nhiệm vụ cá nhân</div>
+            <h2 class="section-title" data-i18n="sec3_title">Vai trò &amp; Nhiệm vụ</h2>
+            <div class="section-subtitle" data-i18n="sec3_subtitle">Trách nhiệm và phạm vi công việc cá nhân trong dự án nhóm 6 người.</div>
+          </div>
+          <div class="section-line"></div>
+          <div class="section-content">
+            <p data-i18n="sec3_p">
+              Trong dự án phân tích hệ thống và triển khai PoC Odoo ERP cho Hana Coffee, tôi đảm nhận các nhiệm vụ chính:
+            </p>
+            <ul class="contribution-list">
+              <li data-i18n="sec3_li1">Thu thập và phân tích yêu cầu từ bối cảnh kinh doanh thực tế của cửa hàng.</li>
+              <li data-i18n="sec3_li2">Khảo sát, xây dựng quy trình AS-IS và định vị các điểm nghẽn vận hành.</li>
+              <li data-i18n="sec3_li3">Thiết kế quy trình mục tiêu (TO-BE) và đề xuất phương án cải tiến tối ưu.</li>
+              <li data-i18n="sec3_li4">Xây dựng hệ thống tài liệu mô hình hóa bao gồm sơ đồ BPMN, Use Case và UML.</li>
+              <li data-i18n="sec3_li5">Phân tích cấu trúc dữ liệu hệ thống và thiết kế sơ đồ ERD chi tiết.</li>
+              <li data-i18n="sec3_li6">Trực tiếp cấu hình các phân hệ Inventory, BoM (Định mức nguyên vật liệu) và Manufacturing trên Odoo.</li>
+              <li data-i18n="sec3_li7">Biên soạn toàn bộ tài liệu báo cáo đồ án và kiểm tra tính đồng bộ của hệ thống mô hình.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- 04 / Kết quả đạt được -->
+        <div class="divider"></div>
+        <section class="content-section" id="contact">
+          <div class="section-intro">
+            <div class="section-number" data-i18n="sec4_number">04 / Kết quả đạt được</div>
+            <h2 class="section-title" data-i18n="sec4_title">Kết quả dự án</h2>
+            <div class="section-subtitle" data-i18n="sec4_subtitle">Thành tựu, hạn chế và hướng phát triển.</div>
+          </div>
+          <div class="section-line"></div>
+          <div class="section-content">
+            <ul class="contribution-list">
+              <li data-i18n="sec4_li1">Hoàn thiện hệ thống trên Odoo 18 Community, kết nối các nghiệp vụ từ mua hàng, kho, sản xuất bán thành phẩm, bán hàng, CRM/Loyalty đến chấm công và quản lý ca.</li>
+              <li data-i18n="sec4_li2">Chuẩn hóa luồng xử lý đơn hàng và liên kết hoạt động bán hàng với kiểm soát nguyên vật liệu thông qua BoM.</li>
+              <li data-i18n="sec4_li3">Phát triển 2 module bổ sung cho nghiệp vụ F&B: <strong>Cafe Modifier</strong> hỗ trợ tùy chỉnh đường, đá, topping và <strong>Advanced Loyalty Management</strong> hỗ trợ quy đổi điểm, giới hạn tần suất đổi điểm và thu hồi điểm khi hoàn hàng.</li>
+              <li data-i18n="sec4_li4">Hoàn thiện bộ tài liệu phân tích và thiết kế gồm BPMN, Use Case, Activity Diagram, Sequence Diagram và ERD.</li>
+            </ul>
+
+            <p style="font-weight: 600; margin-top: 22px;" data-i18n="sec4_limit_title">Hạn chế &amp; hướng phát triển:</p>
+            <p style="font-size: 13px; color: var(--ink-soft); line-height: 1.75;" data-i18n="sec4_limit_desc">
+              Chưa tích hợp GrabFood/ShopeeFood, chưa hỗ trợ đa chi nhánh và chưa triển khai xác thực hai lớp cho đăng nhập bằng mã PIN. Độ chính xác của tồn kho phụ thuộc vào cấu hình BoM và việc cập nhật dữ liệu vận hành.
+            </p>
+
+            <div style="margin-top: 22px;">
+              <a
+                class="meta-value meta-link"
+                href="/assets/odoo.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="font-size: 13px;"
+                data-i18n="sec4_link"
+              >
+                Xem báo cáo dự án <span class="external-icon">↗</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <div style="padding: 20px 0;">
+          <a href="index.html" style="color: inherit; text-decoration: none; font-size: 13px;" data-i18n="footer_back">[← Quay lại danh mục]</a>
+        </div>
+
+        <div class="section-spacer">
+          <footer>
+            <div>
+              <div class="footer-left">
+                © 2026 Nguyễn Thị Sương. All rights reserved.
+              </div>
+            </div>
+
+            <div class="footer-links">
+              <a href="mailto:contact@example.com">Email</a>
+              <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener">LinkedIn</a>
+            </div>
+          </footer>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL GALLERY CHO FOLDER SƠ ĐỒ -->
+  <div id="folderModal" class="gallery-modal">
+    <div class="gallery-modal-container">
+      <div class="gallery-header">
+        <div class="gallery-title" id="folderModalTitle">📁 Thư mục Tài liệu</div>
+        <button class="image-modal-close" onclick="closeFolderModal()">&times;</button>
+      </div>
+
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX MODAL -->
+  <div id="lightboxModal" class="lightbox-modal">
+    <button class="image-modal-close" onclick="closeLightbox()">&times;</button>
+    <button class="lightbox-btn lightbox-prev" onclick="changeImage(-1)">&#10094;</button>
+    <img class="lightbox-content" id="lightboxImg" alt="Phóng to ảnh">
+    <button class="lightbox-btn lightbox-next" onclick="changeImage(1)">&#10095;</button>
+  </div>
+
+  <script>
+    const translations = {
+      vi: {
+        page_title: "Hana Coffee — Hệ thống Quản lý Đơn hàng & Kho (Odoo ERP)",
+        page_desc: "Khảo sát, phân tích và xây dựng hệ thống quản lý đơn hàng tích hợp quản lý kho trên Odoo 18 Community cho Hana Coffee.",
+        nav_home: "Trang chủ",
+        nav_about: "Giới thiệu",
+        nav_skills: "Kỹ năng",
+        nav_projects: "Dự án",
+        nav_contact: "Liên hệ",
+        bc_home: "Trang chủ",
+        bc_projects: "Dự án",
+        bc_current: "Hana Coffee - Hệ thống Quản lý Đơn hàng & Kho",
+        hero_label: "Đồ án học phần - Phân tích Hệ thống & Nghiên cứu Tình huống Triển khai ERP · Đồ án nhóm 6 người",
+        hero_title: "Hana Coffee - Hệ thống Quản lý Đơn hàng & Kho trên Odoo",
+        hero_desc: "Khảo sát, phân tích và xây dựng hệ thống quản lý đơn hàng (OMS) tích hợp quản lý kho (WMS) trên Odoo 18 Community cho Hana Coffee, từ bán hàng tại quầy đến kiểm soát nguyên vật liệu, chăm sóc khách hàng và quản lý ca làm.",
+        meta_type_label: "Loại dự án",
+        meta_type_val: "Phân tích nghiệp vụ & Triển khai ERP",
+        meta_sow_label: "Đơn vị khảo sát",
+        meta_sow_val: "Hana Coffee, TP. Hồ Chí Minh",
+        meta_update_label: "Cập nhật",
+        meta_platform_label: "Nền tảng",
+        meta_platform_val: "Odoo 18 Community · Web-based ERP",
+        tech_methods_label: "Mô hình & Kỹ thuật",
+        tech_tools_label: "Công cụ & Công nghệ",
+        sec1_number: "01 / Bối cảnh & Phạm vi",
+        sec1_title: "Bối cảnh & Phạm vi",
+        sec1_subtitle: "Thách thức vận hành và phạm vi công việc dự án.",
+        sec1_p1: "Qua phỏng vấn và quan sát trực tiếp tại Hana Coffee, nhóm ghi nhận một số điểm nghẽn trong quy trình vận hành:",
+        sec1_li1: "Order được ghi bằng sổ tay hoặc ghi chú điện thoại trước khi nhập vào iPOS, dễ phát sinh nhầm lẫn và chậm trễ vào giờ cao điểm.",
+        sec1_li2: "Kho nguyên liệu được theo dõi bằng sổ tay và cập nhật cuối ngày, khiến thông tin tồn kho chưa phản ánh theo thời gian thực.",
+        sec1_li3: "Báo cáo doanh thu và tồn kho được tổng hợp thủ công qua iPOS và Excel.",
+        sec1_p3_title: "Phạm vi công việc:",
+        sec1_li5: "Khảo sát hiện trạng, stakeholder và pain points.",
+        sec1_li6: "Phân tích nhu cầu người dùng và yêu cầu chức năng/phi chức năng.",
+        sec1_li7: "Mô hình hóa quy trình AS-IS / TO-BE bằng BPMN.",
+        sec1_li8: "Đặc tả Use Case, thiết kế Activity Diagram, Sequence Diagram và ERD.",
+        sec1_li9: "Cấu hình, phát triển bổ sung và kiểm thử hệ thống trên Odoo 18 Community.",
+        sec1_p_out: "Ngoài phạm vi: đa kho, đa chi nhánh và tối ưu chuỗi cung ứng.",
+        sec2_number: "02 / Sản phẩm dự án",
+        sec2_title: "Sản phẩm dự án",
+        sec2_subtitle: "Các deliverables từ khảo sát hiện trạng, phân tích nghiệp vụ đến thiết kế và triển khai hệ thống Odoo.",
+        folder1_name: "Quy trình Hiện trạng (AS-IS)",
+        folder1_desc: "BPMN quy trình bán hàng hiện tại, phân tích stakeholder và xác định các pain points trong vận hành.",
+        folder2_name: "Quy trình Cải tiến (TO-BE)",
+        folder2_desc: "Thiết kế 5 quy trình đề xuất gồm bán hàng, nhập kho & cảnh báo tồn kho, hủy/đổi món, khách hàng thân thiết và xếp ca & chấm công.",
+        folder3_name: "Phân tích & Thiết kế Hệ thống",
+        folder3_desc: "Yêu cầu chức năng/phi chức năng, Use Case tổng quát và đặc tả chi tiết, 8 Activity Diagram, 8 Sequence Diagram và ERD.",
+        folder4_name: "Cấu hình & Phát triển trên Odoo",
+        folder4_desc: "Cấu hình Purchase, Inventory, Manufacturing, POS, KDS, CRM, Loyalty và Attendance; kết hợp phát triển bổ sung các chức năng đặc thù cho nghiệp vụ F&B.",
+        sec3_number: "03 / Vai trò & Nhiệm vụ cá nhân",
+        sec3_title: "Vai trò & Nhiệm vụ",
+        sec3_subtitle: "Trách nhiệm và phạm vi công việc cá nhân trong dự án nhóm 6 người.",
+        sec3_p: "Trong nhóm 6 người, tôi phụ trách:",
+        sec3_li1: "Khảo sát hoạt động tại Hana Coffee và phân tích quy trình quản lý kho.",
+        sec3_li2: "Xác định các bên liên quan và các điểm nghẽn trong quy trình nghiệp vụ.",
+        sec3_li3: "Xây dựng mô hình dữ liệu ERD.",
+        sec3_li4: "Cấu hình các phân hệ Inventory, BoM và Manufacturing trên Odoo.",
+        sec3_li5: "Tham gia triển khai, kiểm thử và đối chiếu tính nhất quán giữa yêu cầu, mô hình và cấu hình hệ thống.",
+        sec4_number: "04 / Kết quả đạt được",
+        sec4_title: "Kết quả dự án",
+        sec4_subtitle: "Thành tựu, hạn chế và hướng phát triển.",
+        sec4_li1: "Hoàn thiện hệ thống trên Odoo 18 Community, kết nối các nghiệp vụ từ mua hàng, kho, sản xuất bán thành phẩm, bán hàng, CRM/Loyalty đến chấm công và quản lý ca.",
+        sec4_li2: "Chuẩn hóa luồng xử lý đơn hàng và liên kết hoạt động bán hàng với kiểm soát nguyên vật liệu thông qua BoM.",
+        sec4_li3: "Phát triển 2 module bổ sung cho nghiệp vụ F&B: Cafe Modifier hỗ trợ tùy chỉnh đường, đá, topping và Advanced Loyalty Management hỗ trợ quy đổi điểm, giới hạn tần suất đổi điểm và thu hồi điểm khi hoàn hàng.",
+        sec4_li4: "Hoàn thiện bộ tài liệu phân tích và thiết kế gồm BPMN, Use Case, Activity Diagram, Sequence Diagram và ERD.",
+        sec4_limit_title: "Hạn chế & hướng phát triển:",
+        sec4_limit_desc: "Chưa tích hợp GrabFood/ShopeeFood, chưa hỗ trợ đa chi nhánh và chưa triển khai xác thực hai lớp cho đăng nhập bằng mã PIN. Độ chính xác của tồn kho phụ thuộc vào cấu hình BoM và việc cập nhật dữ liệu vận hành.",
+        sec4_link: "Xem báo cáo dự án ↗",
+        footer_back: "[← Quay lại danh mục]"
+      },
+      en: {
+        page_title: "Hana Coffee — Order & Inventory Management System (Odoo ERP)",
+        page_desc: "Survey, analysis, and implementation of an OMS integrated with WMS on Odoo 18 Community for Hana Coffee.",
+        nav_home: "Home",
+        nav_about: "About",
+        nav_skills: "Skills",
+        nav_projects: "Projects",
+        nav_contact: "Contact",
+        bc_home: "Home",
+        bc_projects: "Projects",
+        bc_current: "Hana Coffee - Order & Inventory Management System",
+        hero_label: "Course Project - System Analysis & ERP Implementation Case Study · 6-member Team Project",
+        hero_title: "Hana Coffee - Order & Inventory Management System on Odoo",
+        hero_desc: "Survey, analysis, and implementation of an order management system (OMS) integrated with inventory management (WMS) on Odoo 18 Community for Hana Coffee, ranging from counter sales to material control, customer care, and shift management.",
+        meta_type_label: "Project Type",
+        meta_type_val: "Business Analysis & ERP Implementation",
+        meta_sow_label: "Survey Unit",
+        meta_sow_val: "Hana Coffee, Ho Chi Minh City",
+        meta_update_label: "Updated",
+        meta_platform_label: "Platform",
+        meta_platform_val: "Odoo 18 Community · Web-based ERP",
+        tech_methods_label: "Models & Techniques",
+        tech_tools_label: "Tools & Technology",
+        sec1_number: "01 / Context & Scope",
+        sec1_title: "Context & Scope",
+        sec1_subtitle: "Operational challenges and project scope.",
+        sec1_p1: "Through interviews and direct observations at Hana Coffee, the team identified several operational bottlenecks:",
+        sec1_li1: "Orders are recorded manually or via mobile notes before entering iPOS, easily causing confusion and delays during peak hours.",
+        sec1_li2: "Raw material inventory is tracked manually and updated at the end of the day, leaving inventory information lacking real-time reflection.",
+        sec1_li3: "Revenue and inventory reports are manually aggregated via iPOS and Excel.",
+        sec1_p3_title: "Scope of Work:",
+        sec1_li5: "Surveyed current status, stakeholders, and pain points.",
+        sec1_li6: "Analyzed user needs and functional/non-functional requirements.",
+        sec1_li7: "Modeled AS-IS / TO-BE processes using BPMN.",
+        sec1_li8: "Specified Use Cases, designed Activity Diagrams, Sequence Diagrams, and ERD.",
+        sec1_li9: "Configured, developed additions, and tested the system on Odoo 18 Community.",
+        sec1_p_out: "Out of scope: multi-warehouse, multi-branch, and supply chain optimization.",
+        sec2_number: "02 / Project Deliverables",
+        sec2_title: "Project Deliverables",
+        sec2_subtitle: "Deliverables from current state survey and business analysis to Odoo system design and implementation.",
+        folder1_name: "Current Process (AS-IS)",
+        folder1_desc: "Current sales process BPMN, stakeholder analysis, and identification of operational pain points.",
+        folder2_name: "Improvement Process (TO-BE)",
+        folder2_desc: "Designed 5 proposed processes: sales, inventory & stock alerts, cancel/exchange items, loyalty programs, and shift & attendance management.",
+        folder3_name: "System Analysis & Design",
+        folder3_desc: "Functional/non-functional requirements, general Use Case and detailed specifications, 8 Activity Diagrams, 8 Sequence Diagrams, and ERD.",
+        folder4_name: "Odoo Configuration & Development",
+        folder4_desc: "Configured Purchase, Inventory, Manufacturing, POS, KDS, CRM, Loyalty, and Attendance modules; developed specific F&B features.",
+        sec3_number: "03 / Role & Responsibilities",
+        sec3_title: "Role & Responsibilities",
+        sec3_subtitle: "Personal responsibilities and scope within the 6-member team.",
+        sec3_p: "In the 6-member team, I was responsible for:",
+        sec3_li1: "Surveying operations at Hana Coffee and analyzing the inventory management process.",
+        sec3_li2: "Identifying stakeholders and business process bottlenecks.",
+        sec3_li3: "Building the ERD data model.",
+        sec3_li4: "Configuring Inventory, BoM, and Manufacturing modules on Odoo.",
+        sec3_li5: "Participating in deployment, testing, and verifying consistency between requirements, models, and system configuration.",
+        sec4_number: "04 / Project Results",
+        sec4_title: "Project Results",
+        sec4_subtitle: "Achievements, limitations, and future development.",
+        sec4_li1: "Completed the system on Odoo 18 Community, connecting procurement, inventory, semi-finished production, sales, CRM/Loyalty, to attendance and shift management.",
+        sec4_li2: "Standardized order handling workflows and closely linked sales activities with raw material control via BoM.",
+        sec4_li3: "Developed 2 auxiliary modules for F&B operations: Cafe Modifier supporting sugar, ice, and topping customization, and Advanced Loyalty Management supporting point conversion, redemption frequency limits, and point recall upon returns.",
+        sec4_li4: "Completed the analysis and design documentation package including BPMN, Use Case, Activity Diagram, Sequence Diagram, and ERD.",
+        sec4_limit_title: "Limitations & Future Development:",
+        sec4_limit_desc: "GrabFood/ShopeeFood integration, multi-branch support, and two-factor PIN login authentication are not yet implemented. Inventory accuracy depends on BoM configuration and operational data updates.",
+        sec4_link: "View project report ↗",
+        footer_back: "[← Back to portfolio]"
+      }
+    };
+
+    const foldersData = {
+      asis: {
+        titleVi: "📁 1. Quy trình Hiện trạng (AS-IS)",
+        titleEn: "📁 1. Current Process (AS-IS)",
+        images: [
+          { src: "project-02/as1.png", title: "bpmn-asis.png", desc: "Sơ đồ BPMN “As-is” của quy trình bán hàng hiện tại" }
+        ]
+      },
+      design: {
+        titleVi: "📁 2. Quy trình Cải tiến (TO-BE)",
+        titleEn: "📁 2. Improvement Process (TO-BE)",
+        images: [
+          { src: "project-02/to1.png", title: "bpmn-tobe-sales.png", desc: "Sơ đồ BPMN quy trình bán hàng mới (TO-BE)" },
+          { src: "project-02/to2.png", title: "bpmn-tobe-inventory.png", desc: "Sơ đồ BPMN quy trình nhập kho và cảnh báo tồn kho (TO-BE)" },
+          { src: "project-02/to3.png", title: "bpmn-tobe-cancel.png", desc: "Sơ đồ BPMN quy trình hủy/đổi món (TO-BE)" },
+          { src: "project-02/to4.png", title: "bpmn-tobe-loyalty.png", desc: "Sơ đồ BPMN quy trình quản lý khách hàng thân thiết (TO-BE)" },
+          { src: "project-02/to5.png", title: "bpmn-tobe-attendance.png", desc: "Sơ đồ BPMN quy trình xếp ca và chấm công (TO-BE)" } 
+        ]
+      },
+      ui: {
+        titleVi: "📁 3. Phân tích & Thiết kế Hệ thống",
+        titleEn: "📁 3. System Analysis & Design",
+        subfolders: {
+          usecase: {
+            titleVi: "📁 3.1 Use Case & ERD",
+            titleEn: "📁 3.1 Use Case & ERD",
+            images: [
+              { src: "project-02/uc.png", title: "use-case-uml.png", desc: "Sơ đồ Use Case tổng quan" },
+              { src: "project-02/erd.png", title: "erd.png", desc: "Sơ đồ thực thể kết hợp (ERD)" }
+            ]
+          },
+          activitySequence: {
+            titleVi: "📁 3.2 Activity Diagram",
+            titleEn: "📁 3.2 Activity Diagram",
+            images: [
+              { src: "project-02/a1.png", title: "activity-1.png", desc: "Sơ đồ hoạt động quy trình tạo và xử lý đơn hàng" },
+              { src: "project-02/a2.png", title: "activity-2.png", desc: "Sơ đồ hoạt động quy trình chỉnh sửa và hủy món" },
+              { src: "project-02/a3.png", title: "activity-3.png", desc: "Sơ đồ hoạt động quy trình xử lý thanh toán" },
+              { src: "project-02/a4.png", title: "activity-4.png", desc: "Sơ đồ hoạt động quy trình theo dõi và cảnh báo tồn kho" },
+              { src: "project-02/a5.png", title: "activity-5.png", desc: "Sơ đồ hoạt động quy trình nhập kho nguyên liệu" },
+              { src: "project-02/a6.png", title: "activity-6.png", desc: "Sơ đồ hoạt động quy trình xem báo cáo" },
+              { src: "project-02/a7.png", title: "activity-7.png", desc: "Sơ đồ hoạt động quy trình quản lý khách hàng thân thiết" },
+              { src: "project-02/a8.png", title: "activity-8.png", desc: "Sơ đồ hoạt động quy trình quản lý ca làm việc" }
+            ]
+          },
+          dataModel: {
+            titleVi: "📁 3.3 Sequence Diagram",
+            titleEn: "📁 3.3 Sequence Diagram",
+            images: [
+              { src: "project-02/s1.png", title: "sequence-1.png", desc: "Sơ đồ tuần tự quy trình tạo và xử lý đơn hàng" },
+              { src: "project-02/s2.png", title: "sequence-2.png", desc: "Sơ đồ tuần tự quy trình chỉnh sửa và hủy món" },
+              { src: "project-02/s3.png", title: "sequence-3.png", desc: "Sơ đồ tuần tự quy trình xử lý thanh toán" },
+              { src: "project-02/s4.png", title: "sequence-4.png", desc: "Sơ đồ tuần tự quy trình theo dõi và cảnh báo tồn kho" },
+              { src: "project-02/s5.png", title: "sequence-5.png", desc: "Sơ đồ tuần tự quy trình nhập kho nguyên liệu" },
+              { src: "project-02/s6.png", title: "sequence-6.png", desc: "Sơ đồ tuần tự quy trình xem báo cáo" },
+              { src: "project-02/s7.png", title: "sequence-7.png", desc: "Sơ đồ tuần tự quy trình quản lý khách hàng thân thiết" },
+              { src: "project-02/s8.png", title: "sequence-8.png", desc: "Sơ đồ tuần tự quản lý ca làm việc" }
+            ]
+          }
+        }
+      },
+      documentation: {
+        titleVi: "📁 4. Cấu hình & Phát triển trên Odoo",
+        titleEn: "📁 4. Odoo Configuration & Development",
+        images: [
+          { src: "project-02/h1.png", title: "odoo-login.png", desc: "Giao diện đăng nhập hệ thống Hana Coffee" },
+          { src: "project-02/h2.png", title: "odoo-home.png", desc: "Giao diện trang chủ của hệ thống" },
+          { src: "project-02/h3.png", title: "odoo-contacts.png", desc: "Giao diện quản lý danh bạ trong module Contacts" },
+          { src: "project-02/h4.png", title: "odoo-rfq.png", desc: "Giao diện tạo yêu cầu báo giá (RFQ)" },
+          { src: "project-02/h5.png", title: "odoo-purchase.png", desc: "Giao diện xác nhận đơn mua hàng" },
+          { src: "project-02/h6.png", title: "odoo-receipt.png", desc: "Phiếu nhập kho được tạo tự động từ đơn mua hàng" },
+          { src: "project-02/h7.png", title: "odoo-inventory.png", desc: "Giao diện tổng quan kho nguyên liệu" },
+          { src: "project-02/h8.png", title: "odoo-manufacturing.png", desc: "Giao diện lệnh sản xuất bán thành phẩm" },
+          { src: "project-02/h9.png", title: "odoo-pos.png", desc: "Giao diện bán hàng của hệ thống POS" },
+          { src: "project-02/h10.png", title: "odoo-modifier.png", desc: "Giao diện lựa chọn đường, đá và topping" },
+          { src: "project-02/h11.png", title: "odoo-kds.png", desc: "Giao diện màn hình bếp KDS" },
+          { src: "project-02/h12.png", title: "odoo-loyalty.png", desc: "Giao diện cấu hình chương trình tích điểm" },
+          { src: "project-02/h13.png", title: "odoo-crm.png", desc: "Giao diện Pipeline của module CRM" },
+          { src: "project-02/h14.png", title: "odoo-attendance.png", desc: "Giao diện chấm công của hệ thống" }
+        ]
+      }
+    };
+
+    let currentActiveImages = [];
+    let currentIndex = 0;
+    let currentFolderKey = '';
+    let currentSubFolderKey = '';
+    let currentLang = localStorage.getItem("lang") || "vi";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setLanguage(currentLang);
+
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+
+      const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.content-section, .divider').forEach(section => {
+        observer.observe(section);
+      });
+
+      const menuBtn = document.getElementById("menu-btn");
+      const siteNav = document.getElementById("site-nav");
+      if (menuBtn && siteNav) {
+        menuBtn.addEventListener("click", () => {
+          const isExpanded = menuBtn.getAttribute("aria-expanded") === "true";
+          menuBtn.setAttribute("aria-expanded", !isExpanded);
+          siteNav.classList.toggle("is-open");
+          document.body.classList.toggle("no-scroll", !isExpanded);
+        });
+
+        siteNav.querySelectorAll("a").forEach(link => {
+          link.addEventListener("click", () => {
+            menuBtn.setAttribute("aria-expanded", "false");
+            siteNav.classList.remove("is-open");
+            document.body.classList.remove("no-scroll");
+          });
+        });
+      }
+
+      const langBtn = document.getElementById("lang-btn");
+      if (langBtn) {
+        langBtn.addEventListener("click", () => {
+          currentLang = currentLang === 'vi' ? 'en' : 'vi';
+          setLanguage(currentLang);
+        });
+      }
+
+      const themeBtn = document.getElementById("theme-btn");
+      if (themeBtn) {
+        themeBtn.addEventListener("click", () => {
+          const currentTheme = document.documentElement.getAttribute("data-theme");
+          if (currentTheme === "light") {
+            document.documentElement.removeAttribute("data-theme");
+            localStorage.setItem("theme", "dark");
+          } else {
+            document.documentElement.setAttribute("data-theme", "light");
+            localStorage.setItem("theme", "light");
+          }
+        });
+      }
+    });
+
+    function setLanguage(lang) {
+      localStorage.setItem("lang", lang);
+      document.documentElement.setAttribute("lang", lang);
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+
+        if (translations[lang] && translations[lang][key]) {
+          el.innerText = translations[lang][key];
+        }
+      });
+
+      if (currentFolderKey) {
+        const folder = foldersData[currentFolderKey];
+
+        if (!folder) return;
+
+        if (currentSubFolderKey && folder.subfolders) {
+          const subFolder = folder.subfolders[currentSubFolderKey];
+
+          if (subFolder) {
+            document.getElementById('folderModalTitle').innerText =
+              lang === 'en' ? subFolder.titleEn : subFolder.titleVi;
+          }
+        } else {
+          document.getElementById('folderModalTitle').innerText =
+            lang === 'en' ? folder.titleEn : folder.titleVi;
+        }
+      }
+    }
+
+    function openFolder(folderKey) {
+      currentFolderKey = folderKey;
+      currentSubFolderKey = '';
+
+      const folder = foldersData[folderKey];
+      if (!folder) return;
+
+      const gridContainer = document.getElementById('galleryGrid');
+      gridContainer.innerHTML = '';
+
+      document.getElementById('folderModalTitle').innerText =
+        currentLang === 'en' ? folder.titleEn : folder.titleVi;
+
+      if (folder.subfolders) {
+        Object.keys(folder.subfolders).forEach(subKey => {
+          const subFolder = folder.subfolders[subKey];
+
+          const item = document.createElement('div');
+          item.className = 'gallery-item';
+
+          item.onclick = () => openSubFolder(folderKey, subKey);
+
+          item.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 20px; justify-content: center;">
+              <div class="gallery-item-caption" style="font-weight: 600; font-size: 14px;">
+                ${currentLang === 'en' ? subFolder.titleEn : subFolder.titleVi}
+              </div>
+            </div>
+          `;
+
+          gridContainer.appendChild(item);
+        });
+      }
+
+      else if (folder.images) {
+        currentActiveImages = folder.images;
+
+        folder.images.forEach((img, index) => {
+          const item = document.createElement('div');
+
+          item.className = 'gallery-item image-card';
+          item.onclick = () => openLightbox(index);
+
+          item.innerHTML = `
+            <img src="${img.src}" alt="${img.title}">
+            <div class="gallery-item-caption">${img.desc}</div>
+          `;
+
+          gridContainer.appendChild(item);
+        });
+      }
+
+      document.getElementById('folderModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function openSubFolder(parentKey, subKey) {
+      const parentFolder = foldersData[parentKey];
+
+      if (!parentFolder || !parentFolder.subfolders) return;
+
+      const subFolder = parentFolder.subfolders[subKey];
+
+      if (!subFolder) return;
+
+      currentFolderKey = parentKey;
+      currentSubFolderKey = subKey;
+      currentActiveImages = subFolder.images || [];
+
+      document.getElementById('folderModalTitle').innerText =
+        currentLang === 'en' ? subFolder.titleEn : subFolder.titleVi;
+
+      const gridContainer = document.getElementById('galleryGrid');
+      gridContainer.innerHTML = '';
+
+      currentActiveImages.forEach((img, index) => {
+        const item = document.createElement('div');
+
+        item.className = 'gallery-item image-card';
+        item.onclick = () => openLightbox(index);
+
+        item.innerHTML = `
+          <img src="${img.src}" alt="${img.title}">
+          <div class="gallery-item-caption">${img.desc}</div>
+        `;
+
+        gridContainer.appendChild(item);
+      });
+    }
+
+    function closeFolderModal() {
+      document.getElementById('folderModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+
+      currentFolderKey = '';
+      currentSubFolderKey = '';
+    }
+
+    function openLightbox(index) {
+      currentIndex = index;
+      updateLightboxImage();
+      document.getElementById('lightboxModal').style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').style.display = 'none';
+    }
+
+    function updateLightboxImage() {
+      const lightboxImg = document.getElementById('lightboxImg');
+      lightboxImg.src = currentActiveImages[currentIndex].src;
+    }
+
+    function changeImage(direction) {
+      currentIndex += direction;
+      if (currentIndex < 0) {
+        currentIndex = currentActiveImages.length - 1;
+      } else if (currentIndex >= currentActiveImages.length) {
+        currentIndex = 0;
+      }
+      updateLightboxImage();
+    }
+
+    document.addEventListener('keydown', function(event) {
+      const isFolderOpen = document.getElementById('folderModal').style.display === 'block';
+      const isLightboxOpen = document.getElementById('lightboxModal').style.display === 'flex';
+
+      if (event.key === "Escape") {
+        if (isLightboxOpen) {
+          closeLightbox();
+        } else if (isFolderOpen) {
+          closeFolderModal();
+        }
+      }
+
+      if (isLightboxOpen) {
+        if (event.key === "ArrowLeft") {
+          changeImage(-1);
+        } else if (event.key === "ArrowRight") {
+          changeImage(1);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
