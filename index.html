@@ -14,17 +14,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet">
 
   <!-- Áp theme + ngôn ngữ trước khi vẽ trang để không bị nháy -->
-  <script>
-    (function () {
-      try {
-        var t = localStorage.getItem('theme');
-        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        var l = localStorage.getItem('portfolio-lang') === 'en' ? 'en' : 'vi';
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.setAttribute('lang', l);
-      } catch (e) {}
-    })();
-  </script>
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t !== 'light' && t !== 'dark') t = 'dark';
+
+      var l = localStorage.getItem('portfolio-lang') === 'en' ? 'en' : 'vi';
+
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.setAttribute('lang', l);
+    } catch (e) {}
+  })();
+</script>
 
   <style>
 
@@ -2038,7 +2040,7 @@ footer a:hover {
           </a>
 
           <a
-            href="assets/cv-nguyen-thi-suong.pdf"
+            href="BA Intern_Nguyen Thi Suong.pdf"
             class="about-btn secondary"
             download
           >
@@ -2300,7 +2302,7 @@ footer a:hover {
               <a class="ed-link" href="https://github.com" data-link="github" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
             </div>
           </div>
-          <a class="cv-link" href="assets/cv-nguyen-thi-suong.pdf" download>
+          <a class="cv-link" href="assets/BA Intern_Nguyen Thi Suong.pdf" download>
             <span data-i18n="btn-download-cv">Tải CV</span>
             <b>↓</b>
           </a>
