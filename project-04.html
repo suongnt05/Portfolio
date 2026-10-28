@@ -16,10 +16,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap"
-    rel="stylesheet"
-  >
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">  <!-- Áp theme + ngôn ngữ trước khi vẽ trang để không bị nháy -->
+
    <style>
     * {
       margin: 0;
@@ -36,7 +34,7 @@
     body {
       background: var(--bg);
       color: var(--ink);
-      font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
       font-size: 16px;
       line-height: 1.65;
       overflow-x: hidden;
@@ -1102,11 +1100,11 @@
           <div class="section-line"></div>
           <div class="section-content">
             <ul class="contribution-list">
-              <li data-i18n="sec4_li1">Hoàn thiện kho dữ liệu tập trung, hợp nhất thành công dữ liệu đặt phòng từ nhiều nguồn khác nhau.</li>
-              <li data-i18n="sec4_li2">Xây dựng mô hình Star Schema chuẩn hóa giúp tối ưu hóa tốc độ truy vấn và phân tích đa chiều.</li>
-              <li data-i18n="sec4_li3">Tự động hóa quy trình ETL, giảm thiểu đáng kể thời gian và sai sót so với việc xử lý báo cáo thủ công.</li>
-              <li data-i18n="sec4_li4">Cung cấp hệ thống dashboard Power BI trực quan giúp ban quản trị theo dõi công suất phòng và doanh thu thời gian thực.</li>
-              <li data-i18n="sec4_li5">Cung cấp nền tảng dữ liệu vững chắc cho việc dự báo xu hướng lưu trú và hoạch định chiến lược kinh doanh tương lai.</li>
+              <li data-i18n="sec4_li1">Xây dựng kho dữ liệu khách sạn trên SQL Server, tổ chức dữ liệu thành bảng Fact_Bookings và các bảng Dim_Customer, Dim_Room, Dim_Date.</li>
+<li data-i18n="sec4_li2">Thực hành quy trình ETL bằng SSIS để xử lý dữ liệu từ file CSV và nạp vào kho dữ liệu.</li>
+<li data-i18n="sec4_li3">Xây dựng mô hình dữ liệu Star Schema và thiết lập các mối quan hệ giữa bảng phục vụ phân tích.</li>
+<li data-i18n="sec4_li4">Xây dựng dashboard Power BI với các chỉ số doanh thu theo tháng, công suất phòng, số đêm lưu trú, doanh thu theo phòng và tình hình hủy đặt phòng.</li>
+<li data-i18n="sec4_li5">Sử dụng biểu đồ và tính năng Forecasting của Power BI để quan sát xu hướng doanh thu, từ đó đề xuất hướng điều chỉnh giá phòng và hoạt động marketing theo mùa.</li>
             </ul>
             <div style="margin-top: 22px;">
               <a
